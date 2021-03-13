@@ -52,8 +52,17 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Network\ClientConn.cs" />
+    <Compile Include="Network\Configuration\MsgConfiguration.cs" />
+    <Compile Include="Network\Configuration\ServerConfiguration.cs" />
+    <Compile Include="Network\MainMsg.cs" />
+    <Compile Include="Network\NetInterface\IMainMsg.cs" />
+    <Compile Include="Network\NetInterface\ITcpMsg.cs" />
+    <Compile Include="SocketServer.cs" />
+    <Compile Include="Network\TcpMsg.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tools\ConvertTypeTool.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -75,6 +84,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Cricle\Configuration\" />
+    <Folder Include="FileStream\" />
+    <Folder Include="SQLServer\" />
+    <Folder Include="StatisticalData\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
