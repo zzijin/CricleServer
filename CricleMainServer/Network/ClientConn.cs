@@ -9,6 +9,11 @@ namespace CricleMainServer.Network
 
     class ClientConn
     {
+        private int poolIndex;
 
+        public ClientConn(int index)
+        {
+            poolIndex = index;
+        }
     }
 }
