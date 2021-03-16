@@ -115,7 +115,7 @@ namespace CricleMainServer.Network
         // 3.判断开始标识符，数据大小、结束标识符时也会将消息记录到类中(边判断边读取)
         /// -2021.3.16
         /// <summary>
-        /// 检查在receivedData中是否存在未解析的数据
+        /// 查验receivedData中的数据
         /// </summary>
         /// <param name="receivedData">接收数据缓存数组</param>
         /// <param name="readIndex">读取数据起始位置</param>
@@ -135,7 +135,7 @@ namespace CricleMainServer.Network
                         byte[] sizeBytes = new byte[4];
                         Buffer.BlockCopy(receivedData, readIndex + 1, sizeBytes, 0, 4);
                         int msgSize = BitConverter.ToInt32(sizeBytes, 0);
-                        //判断剩余可读数据是否
+                        //判断剩余可读数据中是否存在可解析消息包
                         if (writeIndex - readIndex > 5 + msgSize)
                         {
                             if (receivedData[readIndex] == MsgConfiguration.MSG_END_TAG)
@@ -147,6 +147,11 @@ namespace CricleMainServer.Network
                                 readIndex += msgPackCount;
                                 state = 1;
                                 return msgPack;
+                            }
+                            else
+                            {
+                                state = 3;
+                                return null;
                             }
                         }
                     }
@@ -161,7 +166,33 @@ namespace CricleMainServer.Network
             {
                 if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex < 22)
                 {
+                    //判断首字节是否与起始标识符一致
+                    if (receivedData[readIndex] == MsgConfiguration.MSG_START_TAG)
+                    {
+                        //判断表示size的四个字节是否在readIndex至缓存区最后一位间的可读数据中
+                        if (readIndex + 4 < MsgConfiguration.MSG_BUFF_SIZE)
+                        {
+                            byte[] sizeBytes = new byte[4];
+                            Buffer.BlockCopy(receivedData, readIndex + 1, sizeBytes, 0, 4);
+                            int msgSize = BitConverter.ToInt32(sizeBytes, 0);
+                            //判断剩余可读数据中是否存在可解析消息包
 
+                        }
+                        else
+                        {
+                            byte[] sizeBytes = new byte[4];
+                            int sizeByteOffset = MsgConfiguration.MSG_BUFF_SIZE - readIndex-1;
+                            Buffer.BlockCopy(receivedData, readIndex + 1, sizeBytes, 0, sizeByteOffset);
+                            Buffer.BlockCopy(receivedData, 0, sizeBytes, sizeByteOffset, 4 - sizeByteOffset);
+                            int msgSize = BitConverter.ToInt32(sizeBytes, 0);
+                            //判断剩余可读数据中是否存在可解析消息包
+                        }
+                    }
+                    else
+                    {
+                        state = 3;
+                        return null;
+                    }
                 }
             }
             else if (readIndex == writeIndex || readIndex == writeIndex - 1)

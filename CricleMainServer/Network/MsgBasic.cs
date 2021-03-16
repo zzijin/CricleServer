@@ -21,6 +21,7 @@ namespace CricleMainServer.Network
     ///        Y              消息包结束标识符        msgEndTag             byte             1                 包尾标识符
     ///*************************************************** 消息包格式
     ///-2021.3.14
+    ///
     /// <summary>
     /// socket收发TCP主体消息类
     /// </summary>
