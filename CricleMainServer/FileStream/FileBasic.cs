@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CricleMainServer.Network.NetInterface
+namespace CricleMainServer.FileStream
 {
-    interface IMainMsg
+    class FileBasic
     {
+
     }
 }

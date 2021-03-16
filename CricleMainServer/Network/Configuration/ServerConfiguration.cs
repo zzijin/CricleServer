@@ -21,9 +21,5 @@ namespace CricleMainServer.Network.Configuration
         /// 最大连接客户端数
         /// </summary>
         public static readonly int CONN_SIZE = 100;
-        /// <summary>
-        /// 缓冲区大小
-        /// </summary>
-        public static readonly int BUFF_SIZE = 10 * 1024;
     }
 }

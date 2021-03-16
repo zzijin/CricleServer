@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CricleMainServer.Tools
 {
@@ -33,12 +29,12 @@ namespace CricleMainServer.Tools
         /// </summary>
         /// <param name="arry">4个字节大小的byte数组</param>
         /// <returns></returns>
-        static public Int32 ByteArrayToInt32(byte[] ar)
+        static public int ByteArrayToInt32(byte[] ar)
         {
             byte[] arry = new byte[ar.Length];
             arry = ar;
 
-            Int32 m;
+            int m;
 
             if (arry == null)
                 return -1;
@@ -50,12 +46,12 @@ namespace CricleMainServer.Tools
         }
 
         /// <summary>
-        /// 工具函数，用于合并数组
+        /// 合并数组
         /// </summary>
         /// <param name="a">第一个合并数组</param>
         /// <param name="b">第二个合并数组</param>
         /// <returns>合并完成的数组</returns>
-        static public byte[] PooledByteArray(byte[] a, byte[] b)
+        static public byte[] MergerByteArray(byte[] a, byte[] b)
         {
             byte[] c;
             //使用Buffer.BlockCopy合成数组优化性能
@@ -66,23 +62,23 @@ namespace CricleMainServer.Tools
         }
 
         /// <summary>
-        /// 工具函数，用于合并数组(注意:本函数专用于封包，将默认开头结尾添加标识符0x99)
+        /// 合并数组(注意:本函数专用于封包，将默认开头结尾添加标识符)
         /// </summary>
         /// <param name="a">第一个合并数组</param>
         /// <param name="b">第二个合并数组</param>
         /// <returns>合并完成的数组</returns>
-        static public byte[] PooledByteArrayForPackMessage(byte[] a, byte[] b)
+        static public byte[] MergerByteArrayForPackMessage(byte[] msgSize, byte[] msgBasic,byte msgStartTag,byte msgEndTag)
         {
-            byte[] c = new byte[a.Length + b.Length + 2];
+            byte[] msgPack = new byte[msgSize.Length + msgBasic.Length + 2];
 
             //使用Buffer.BlockCopy合成数组优化性能
 
-            System.Buffer.BlockCopy(a, 0, c, 1, a.Length);
-            System.Buffer.BlockCopy(b, 0, c, a.Length + 1, b.Length);
-            c[0] = SocketConfiguration.DATA_START_TAG;
-            c[c.Length - 1] = SocketConfiguration.DATA_END_TAG;
+            System.Buffer.BlockCopy(msgSize, 0, msgPack, 1, msgSize.Length);
+            System.Buffer.BlockCopy(msgBasic, 0, msgPack, msgSize.Length + 1, msgBasic.Length);
+            msgPack[0] = msgStartTag;
+            msgPack[msgPack.Length - 1] = msgEndTag;
 
-            return c;
+            return msgPack;
         }
 
         /// <summary>
@@ -92,21 +88,50 @@ namespace CricleMainServer.Tools
         /// <param name="start">截取数组起始位置</param>
         /// <param name="count">需截取的长度</param>
         /// <returns>截取完毕的数组</returns>
-        static public byte[] CutByteArrayFromArrayToAnother(byte[] by, int start, int count)
+        static public byte[] CutByteArray(byte[] by, int start, int count)
         {
             byte[] cut = new byte[count];
-            System.Buffer.BlockCopy(by, start, cut, 0, count);
+            Buffer.BlockCopy(by, start, cut, 0, count);
             return cut;
         }
-
+        
+        /// <summary>
+        /// Base64转byte数组
+        /// </summary>
+        /// <param name="base64"></param>
+        /// <returns></returns>
         static public byte[] Base64ToByteArray(string base64)
         {
             return Convert.FromBase64String(base64);
         }
 
+        /// <summary>
+        /// byte数组转Base64
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
         static public string ByteArrayToBase64(byte[] bytes)
         {
             return Convert.ToBase64String(bytes);
         }
+
+        /// <summary>
+        /// 获取当前时间戳的长整性(毫秒)
+        /// </summary>
+        /// <returns></returns>
+        static public long GetLongOfNowTime()
+        {
+            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            return Convert.ToInt64(ts.TotalMilliseconds);
+        }
+        /// <summary>
+        /// 时间的string形式转DateTime形式
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        static public DateTime StringToDateTime(string time)
+        {
+            return DateTime.Parse(time);
+        } 
     }
 }

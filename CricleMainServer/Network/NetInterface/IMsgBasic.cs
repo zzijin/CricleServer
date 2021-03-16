@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CricleMainServer.Network.NetInterface
 {
-    interface ITcpMsg
+    interface IMsgBasic
     {
     }
 }
