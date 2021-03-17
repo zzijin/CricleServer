@@ -135,7 +135,6 @@ namespace CricleMainServer.Network
         /// <returns>返回检查到的第一个消息包</returns>
         public static MsgPack CheckMsgInfo(ref byte[] receivedData, ref int readIndex,ref int writeIndex,out int state)
         {
-            
             if (readIndex < writeIndex)
             {
                 if (writeIndex - readIndex > 22)
@@ -149,7 +148,7 @@ namespace CricleMainServer.Network
                         //判断剩余可读数据中是否存在可解析消息包
                         if (writeIndex - readIndex > 5 + msgSize)
                         {
-                            if (receivedData[readIndex] == MsgConfiguration.MSG_END_TAG)
+                            if (receivedData[readIndex + msgSize + 5] == MsgConfiguration.MSG_END_TAG)
                             {
                                 byte[] msgBasicData = new byte[msgSize];
                                 Buffer.BlockCopy(receivedData, readIndex + 5, msgBasicData, 0, msgSize);
@@ -180,15 +179,15 @@ namespace CricleMainServer.Network
                     if (receivedData[readIndex] == MsgConfiguration.MSG_START_TAG)
                     {
                         int msgBasicIndex;
-                        byte[] sizeBytes = ConvertTypeTool.LoopReadFromArray(ref receivedData,MsgConfiguration.MSG_BUFF_SIZE,readIndex+1,4,out msgBasicIndex);
+                        byte[] sizeBytes = ConvertTypeTool.LoopReadFromArray(ref receivedData, MsgConfiguration.MSG_BUFF_SIZE, readIndex + 1, 4, out msgBasicIndex);
                         int msgSize = BitConverter.ToInt32(sizeBytes, 0);
-                        if(MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex < 5 + msgSize)
+                        if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex < 5 + msgSize)
                         {
                             int endTagIndex;
                             if (msgBasicIndex > readIndex)
                             {
                                 int offset = MsgConfiguration.MSG_BUFF_SIZE - msgBasicIndex;
-                                if(offset> 5 + msgSize)
+                                if (offset > 5 + msgSize)
                                 {
                                     endTagIndex = readIndex + 5 + msgSize;
                                 }

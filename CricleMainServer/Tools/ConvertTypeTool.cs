@@ -155,7 +155,7 @@ namespace CricleMainServer.Tools
             else
             {
                 Buffer.BlockCopy(byteArray, readIndex, readBytes, 0, offset);
-                Buffer.BlockCopy(byteArray, 0, readBytes, offset, size-offset);
+                Buffer.BlockCopy(byteArray, 0, readBytes, offset, size - offset);
                 endIndex = size - offset;
             }
             return readBytes;
