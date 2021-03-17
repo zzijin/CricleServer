@@ -132,6 +132,33 @@ namespace CricleMainServer.Tools
         static public DateTime StringToDateTime(string time)
         {
             return DateTime.Parse(time);
-        } 
+        }
+
+        /// <summary>
+        /// 从一个数组中循环读取指定长度的字节
+        /// </summary>
+        /// <param name="byteArray">被读取的字节数组</param>
+        /// <param name="arrayLength">被读取的字节数组长度</param>
+        /// <param name="readIndex">读取字节起始位置</param>
+        /// <param name="size">读取字节长度</param>
+        /// <param name="endIndex">读取字节后下次读取的起始位置</param>
+        /// <returns>读取到的字节</returns>
+        static public byte[] LoopReadFromArray(ref byte[] byteArray, int arrayLength, int readIndex, int size,out int endIndex)
+        {
+            byte[] readBytes = new byte[size];
+            int offset = arrayLength - readIndex;
+            if (offset > size)
+            {
+                Buffer.BlockCopy(byteArray, readIndex, readBytes, 0, 4);
+                endIndex = readIndex + size;
+            }
+            else
+            {
+                Buffer.BlockCopy(byteArray, readIndex, readBytes, 0, offset);
+                Buffer.BlockCopy(byteArray, 0, readBytes, offset, size-offset);
+                endIndex = size - offset;
+            }
+            return readBytes;
+        }
     }
 }

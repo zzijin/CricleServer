@@ -40,7 +40,7 @@ namespace CricleMainServer.Network
 
         //////////////////////////////////打包数据
         /// <summary>
-        /// 
+        /// 打包函数，测试使用
         /// </summary>
         /// <param name="msgType">消息类别</param>
         /// <param name="msgData">消息数据</param>
@@ -49,6 +49,18 @@ namespace CricleMainServer.Network
         public MsgBasic(int msgType, byte[] msgData,long msgTime,int msgFlag)
         {
             this.msgType = msgType;this.msgData = msgData;this.msgTime = msgTime;this.msgFlag = msgFlag;
+        }
+        /// <summary>
+        /// 打包函数,实际使用
+        /// </summary>
+        /// <param name="msgType"></param>
+        /// <param name="msgData"></param>
+        /// <param name="msgFlag"></param>
+        public MsgBasic(int msgType,byte[] msgData,int msgFlag)
+        {
+            this.msgType = msgType; this.msgData = msgData;  this.msgFlag = msgFlag;
+            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            this.msgTime = Convert.ToInt64(ts.TotalMilliseconds);
         }
 
         /// <summary>
