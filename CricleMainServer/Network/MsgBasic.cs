@@ -59,8 +59,7 @@ namespace CricleMainServer.Network
         public MsgBasic(int msgType,byte[] msgData,int msgFlag)
         {
             this.msgType = msgType; this.msgData = msgData;  this.msgFlag = msgFlag;
-            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            this.msgTime = Convert.ToInt64(ts.TotalMilliseconds);
+            this.msgTime = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
         }
 
         /// <summary>
@@ -116,7 +115,5 @@ namespace CricleMainServer.Network
             this.msgFlag = BitConverter.ToInt32(flagBytes, 0);
         }
         //////////////////////////////////解包数据
-        
-        
     }
 }

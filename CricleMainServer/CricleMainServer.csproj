@@ -64,6 +64,7 @@
     <Compile Include="Network\NetInterface\IMsgPack.cs" />
     <Compile Include="Network\ListenServer.cs" />
     <Compile Include="Network\MsgPack.cs" />
+    <Compile Include="Network\ProcessMsg.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerManager.cs" />

@@ -105,7 +105,7 @@ namespace CricleMainServer.Network
         // 1.当writeIndex<readIndex-1,写入到readIndex前一位停止。
         // 2.当writeIndex>=readIndex,可写入到数组的最后一位。
         // 3.当writeIndex=readIndex-1,进入等待线程池
-        // 4.当writeindex=数组最后一位,writeIndex=0;
+        // 4.当writeindex=数组大小,writeIndex=0;
         // 二、在读取数据是(解包数据时),该函数将从read位置开始读取:
         // 1.当readIndex<writeIndex-1,可读取数据到writeIndex前一位。
         // 2.当readIndex>writeIndex,可读取数据到数组最后一位并归0，再按1规则继续读取
@@ -173,27 +173,27 @@ namespace CricleMainServer.Network
             }
             else if (readIndex > writeIndex)
             {
-                if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex < 22)
+                if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex > 22)
                 {
                     //判断首字节是否与起始标识符一致
                     if (receivedData[readIndex] == MsgConfiguration.MSG_START_TAG)
                     {
                         int msgBasicIndex;
-                        byte[] sizeBytes = ConvertTypeTool.LoopReadFromArray(ref receivedData, MsgConfiguration.MSG_BUFF_SIZE, readIndex + 1, 4, out msgBasicIndex);
+                        byte[] sizeBytes = ConvertTypeTool.LoopReadFromArray(ref receivedData, MsgConfiguration.MSG_BUFF_SIZE, (readIndex + 1), 4, out msgBasicIndex);
                         int msgSize = BitConverter.ToInt32(sizeBytes, 0);
-                        if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex < 5 + msgSize)
+                        if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex > 6 + msgSize)
                         {
                             int endTagIndex;
                             if (msgBasicIndex > readIndex)
                             {
                                 int offset = MsgConfiguration.MSG_BUFF_SIZE - msgBasicIndex;
-                                if (offset > 5 + msgSize)
+                                if (offset >= 1 + msgSize)
                                 {
                                     endTagIndex = readIndex + 5 + msgSize;
                                 }
                                 else
                                 {
-                                    endTagIndex = msgSize - offset;
+                                    endTagIndex = offset - msgSize;
                                 }
                             }
                             else
@@ -202,8 +202,8 @@ namespace CricleMainServer.Network
                             }
                             if (receivedData[endTagIndex] == MsgConfiguration.MSG_END_TAG)
                             {
-                                byte[] msgPackData = new byte[msgSize];
-                                ConvertTypeTool.LoopReadFromArray(ref receivedData, MsgConfiguration.MSG_BUFF_SIZE, msgBasicIndex, msgSize, out readIndex);
+                                byte[] msgPackData = ConvertTypeTool.LoopReadFromArray(ref receivedData, MsgConfiguration.MSG_BUFF_SIZE, msgBasicIndex, msgSize, out readIndex);
+                                readIndex++;
                                 MsgPack msgPack = new MsgPack(msgSize, msgPackData);
                                 state = 1;
                                 return msgPack;

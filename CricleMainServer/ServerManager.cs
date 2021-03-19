@@ -7,6 +7,8 @@ using CricleMainServer.Network;
 
 namespace CricleMainServer
 {
+    //该服务器socket连接使用异步连接方式，客户端解析数据使用线程池
+    //
     /// <summary>
     /// 服务器管理类
     /// </summary>
