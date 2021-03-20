@@ -38,7 +38,7 @@ namespace CricleMainServer.Network
         public int MsgFlag { get => msgFlag; set => msgFlag = value; }
         public MsgBasic() { }
 
-        //////////////////////////////////打包数据
+        #region 打包数据
         /// <summary>
         /// 打包函数，测试使用
         /// </summary>
@@ -83,9 +83,9 @@ namespace CricleMainServer.Network
         {
             return 16 + msgData.Length;
         }
-        //////////////////////////////////打包数据
+        #endregion
 
-        //////////////////////////////////解包数据
+        #region 解包数据
         /// <summary>
         /// 
         /// </summary>
@@ -114,6 +114,6 @@ namespace CricleMainServer.Network
             Buffer.BlockCopy(basicMsgData, msgFlagIndex, flagBytes, 0, 4);
             this.msgFlag = BitConverter.ToInt32(flagBytes, 0);
         }
-        //////////////////////////////////解包数据
+        #endregion
     }
 }

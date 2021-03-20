@@ -15,6 +15,12 @@ namespace CricleMainServer.Network
      class ListenServer
     {
         private Socket listenServer;
+        private DTryNewConn dTryNewConn;
+
+        public ListenServer(DTryNewConn dTryNewConn)
+        {
+            this.dTryNewConn = dTryNewConn;
+        }
 
         /// <summary>
         /// 开始监听端口
@@ -37,7 +43,16 @@ namespace CricleMainServer.Network
         /// <param name="ar">异步操作状态</param>
         private void AcceptCb(IAsyncResult ar)
         {
-
+            Socket newSocket = listenServer.EndAccept(ar);
+            if (dTryNewConn(newSocket))
+            {
+                //建立连接成功
+            }
+            else
+            {
+                //建立连接失败
+            }
+            listenServer.BeginAccept(AcceptCb, null);
         }
 
         /// <summary>

@@ -35,7 +35,8 @@ namespace CricleMainServer.Network
 
         public MsgPack(){}
 
-        //////////////////////////////////打包数据
+        #region 打包数据
+
         /// <summary>
         /// 仅供测试使用打包数据
         /// </summary>
@@ -63,10 +64,10 @@ namespace CricleMainServer.Network
             return ConvertTypeTool.MergerByteArrayForPackMessage(BitConverter.GetBytes(msgSize), msgData.GetMsgBasicData(), msgStartTag, msgEndTag);
         }
 
-        //////////////////////////////////打包数据
+        #endregion
 
-        //////////////////////////////////解包数据
-        
+        #region 解包数据
+
         /// <summary>
         /// 解包函数,测试用
         /// </summary>
@@ -239,6 +240,6 @@ namespace CricleMainServer.Network
             state = 2;
             return null;
         }
-        //////////////////////////////////解包数据
+        #endregion
     }
 }
