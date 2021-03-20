@@ -147,7 +147,8 @@ namespace CricleMainServer.Tools
         {
             byte[] readBytes = new byte[size];
             int offset = arrayLength - readIndex;
-            if (offset >= size)
+            //此处offset=size时，endIndex=0，故设置条件offset>size
+            if (offset > size)
             {
                 Buffer.BlockCopy(byteArray, readIndex, readBytes, 0, size);
                 endIndex = readIndex + size;

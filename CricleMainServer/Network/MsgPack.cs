@@ -107,13 +107,13 @@ namespace CricleMainServer.Network
         // 3.当writeIndex=readIndex-1,进入等待线程池
         // 4.当writeindex=数组大小,writeIndex=0;
         // 二、在读取数据是(解包数据时),该函数将从read位置开始读取:
-        // 1.当readIndex<writeIndex-1,可读取数据到writeIndex前一位。
+        // 1.当readIndex<writeIndex,可读取数据到writeIndex前一位。
         // 2.当readIndex>writeIndex,可读取数据到数组最后一位并归0，再按1规则继续读取
-        // 3.当readIndex=writeIndex||readIndex=writeIndex-1,此时不可读取,表示没有新数据存入
+        // 3.当readIndex=writeIndex,此时不可读取,表示没有新数据存入
         // 但在实际应用时还可以考虑到一个消息包至少的大小(在msgData=null时)为1(startTag)+4(size)+4(type)+8(time)+4(flag)+1(endTag)=22字节,故可优化读取规则：
         // 1.当readIndex<writeIndex,判断writeIndex-readIndex>22?可读取数据段为readIndex至writeIndex-1:不可读取，消息不完整。
         // 2.当readIndex>writeIndex,判断length-readIndex+writeIndex>22?可读取数据段为readIndex至length-1加上0至writeIndex-1:不可读取，消息不完整
-        // 3.当readIndex=writeIndex||readIndex=writeIndex-1,此时不可读取,表示没有新数据存入
+        // 3.当readIndex=writeIndex,此时不可读取,表示没有新数据存入
         /// 解包步骤:在socket异步接收消息时，并非每次都接收到的不一定是一条完整的消息包，他可能小于一条或大于一条
         /// 所以在解包时需要分步判断：
         /// 1.判断开头是否为开始标志符，若不是可能消息已被篡改，断开重连此链接
@@ -193,7 +193,7 @@ namespace CricleMainServer.Network
                                 }
                                 else
                                 {
-                                    endTagIndex = offset - msgSize;
+                                    endTagIndex = msgSize - offset;
                                 }
                             }
                             else
@@ -203,7 +203,16 @@ namespace CricleMainServer.Network
                             if (receivedData[endTagIndex] == MsgConfiguration.MSG_END_TAG)
                             {
                                 byte[] msgPackData = ConvertTypeTool.LoopReadFromArray(ref receivedData, MsgConfiguration.MSG_BUFF_SIZE, msgBasicIndex, msgSize, out readIndex);
-                                readIndex++;
+
+                                if (readIndex != MsgConfiguration.MSG_BUFF_SIZE - 1)
+                                {
+                                    readIndex++;
+                                }
+                                else
+                                {
+                                    readIndex = 0;
+                                }
+
                                 MsgPack msgPack = new MsgPack(msgSize, msgPackData);
                                 state = 1;
                                 return msgPack;
@@ -222,8 +231,10 @@ namespace CricleMainServer.Network
                     }
                 }
             }
-            else if (readIndex == writeIndex || readIndex == writeIndex - 1)
+            else if (readIndex == writeIndex)
             {
+                state = 0;
+                return null;
             }
             state = 2;
             return null;

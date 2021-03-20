@@ -140,7 +140,7 @@ namespace CricleMainServer.Network
             {
                 case 1:
                     {
-                        //表示检查成功，从中接收数据中解析一个消息包
+                        //表示检查成功，从中接收数据中解析一个消息包msgPack
 
                     }break;
                 case 2:
