@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CricleMainServer.Network;
+﻿using CricleMainServer.Network;
+using System;
+using System.Threading;
 
 namespace CricleMainServer
 {
@@ -17,6 +14,7 @@ namespace CricleMainServer
         private ListenServer listenServer;
         private ClientConnPool connPool;
 
+        
 
         public void OpenListenServer()
         {
@@ -36,6 +34,13 @@ namespace CricleMainServer
         public void StopServer()
         {
             throw new NotImplementedException();
+        }
+
+        //初始化程序线程池
+        public void InitThreadPool()
+        {
+            ThreadPool.SetMinThreads(2, 2);
+            ThreadPool.SetMaxThreads(4, 4);
         }
     }
 }

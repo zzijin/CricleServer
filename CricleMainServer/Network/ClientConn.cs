@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using CricleMainServer.Network.Configuration;
+using System;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using CricleMainServer.Network.Configuration;
 
 namespace CricleMainServer.Network
 {
@@ -87,6 +83,7 @@ namespace CricleMainServer.Network
             this.clientUID = -1;
             this.dFindSocketByUID = dFind;
             this.dSendMsg = new DSendMyClientData(BeginSendMsg);
+            this.processMsg = new ProcessMsg(dSendMsg,dFindSocketByUID);
         }
         #endregion
         #region 开启客户端链接
@@ -99,6 +96,7 @@ namespace CricleMainServer.Network
             this.writeIndex = 0;
             this.readIndex = 0;
             clientSocket.BeginReceive(clientBuff, writeIndex, MsgConfiguration.MSG_BUFF_SIZE - writeIndex, SocketFlags.None, EndReceive, null);
+
         }
         #endregion
 
@@ -202,6 +200,7 @@ namespace CricleMainServer.Network
             if (!readState)
             {
                 CheckMsgInfo();
+                
                 readState = true;
             }
         }

@@ -1,18 +1,14 @@
 ﻿using CricleMainServer.Network.Configuration;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CricleMainServer.Network
 {
     /// <summary>
     /// 服务器接入类
     /// </summary>
-     class ListenServer
+    class ListenServer
     {
         private Socket listenServer;
         private DTryNewConn dTryNewConn;

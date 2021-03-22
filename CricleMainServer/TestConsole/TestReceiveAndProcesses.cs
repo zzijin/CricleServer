@@ -3,11 +3,8 @@ using CricleMainServer.Network.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace CricleMainServer.TestConsole
 {
@@ -28,8 +25,6 @@ namespace CricleMainServer.TestConsole
         static void TestMsgPack()
         {
             //WriteMsgPack(4);
-            ThreadPool.SetMinThreads(2, 2);
-            ThreadPool.SetMaxThreads(4, 4);
             ThreadPool.QueueUserWorkItem(new WaitCallback(ThreadWriteMsgPack));
             ThreadPool.QueueUserWorkItem(new WaitCallback(ThreadReadMsgPack));
         }
