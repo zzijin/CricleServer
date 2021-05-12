@@ -126,6 +126,19 @@ namespace CricleMainServer.Network
         // 2.判断开始标识符，数据大小、结束标识符后再将一个完整消息包取出再解析(可以设置静态方法使用此判断后再将该完整消息包传递给解包函数)[采用此方法]
         // 3.判断开始标识符，数据大小、结束标识符时也会将消息记录到类中(边判断边读取)
         /// -2021.3.16
+        /// 读写规则修改
+        // 在socket异步接收中，将接收到的数据存入一条byte数组中，此数组可供同时读取和写入
+        // 为使读写不冲突，需设立两个变量指标readIndex与writeIndex，readIndex表示解包数据,并在写入读取时有以下情况存在：
+        //  一、在写入数据时(接收数据时),socket将从write位置开始异步写入:
+        // 1.当writeIndex<readIndex-1,写入到readIndex前一位停止,写入大小:readIndex-writeIndex-1。(留一字节空白)
+        // 2.当writeIndex>=readIndex,若readIndex>0，则可写入buffSize-writeIndex;若readIndex==0;则只可写入buffSize-writeIndex-1。
+        // 3.当writeIndex=readIndex-1,进入等待线程池
+        // 4.当writeindex=数组大小,writeIndex=0;
+        // 二、在读取数据是(解包数据时),该函数将从read位置开始读取:
+        // 1.当readIndex<writeIndex,判断writeIndex-readIndex>22?可读取数据段为readIndex至writeIndex-1:不可读取，消息不完整。
+        // 2.当readIndex>writeIndex,判断length-readIndex+writeIndex>22?可读取数据段为readIndex至length-1加上0至writeIndex-1:不可读取，消息不完整
+        // 3.当readIndex=writeIndex,此时不可读取,表示没有新数据存入
+        ///-2021.3.26
         /// <summary>
         /// 查验receivedData中的数据
         /// </summary>
@@ -182,7 +195,7 @@ namespace CricleMainServer.Network
                         int msgBasicIndex;
                         byte[] sizeBytes = ConvertTypeTool.LoopReadFromArray(ref receivedData, MsgConfiguration.MSG_BUFF_SIZE, (readIndex + 1), 4, out msgBasicIndex);
                         int msgSize = BitConverter.ToInt32(sizeBytes, 0);
-                        if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex > 6 + msgSize)
+                        if (MsgConfiguration.MSG_BUFF_SIZE - readIndex + writeIndex > 5 + msgSize)
                         {
                             int endTagIndex;
                             if (msgBasicIndex > readIndex)

@@ -11,14 +11,20 @@ namespace CricleMainServer
     /// </summary>
     class ServerManager:IServerManager
     {
+        //服务器监听
         private ListenServer listenServer;
+        //链接池管理
         private ClientConnPool connPool;
 
-        
+        public ServerManager()
+        {
+            connPool = new ClientConnPool();
+            listenServer = new ListenServer(connPool.DTryNewConn);
+        }
 
         public void OpenListenServer()
         {
-            throw new NotImplementedException();
+            listenServer.OpenListenServer();
         }
 
         public void OpenServer()
@@ -28,7 +34,7 @@ namespace CricleMainServer
 
         public void StopListenServer()
         {
-            throw new NotImplementedException();
+            listenServer.StopListenServer();
         }
 
         public void StopServer()

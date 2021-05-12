@@ -1,6 +1,7 @@
 ﻿using CricleMainServer.Network.Configuration;
 using System;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace CricleMainServer.Network
 {
@@ -19,7 +20,7 @@ namespace CricleMainServer.Network
         /// <summary>
         /// 该链接被使用的次数(因放在统计数据中)
         /// </summary>
-        //private int clienUserTimes;
+        //private int clienUsedTimes;
         /// <summary>
         /// 该链接的连接客户端的套接字信息
         /// </summary>
@@ -28,6 +29,7 @@ namespace CricleMainServer.Network
         /// 该链接本次连接客户端的起始时间
         /// </summary>
         private long clientConnStartTime;
+        private long receivePackNumber;
 
         //客户端需长时间保存的数据，如登录用户的UID，数据项多可以用单独的用户类保存
         /// <summary>
@@ -89,14 +91,20 @@ namespace CricleMainServer.Network
         #region 开启客户端链接
         public void OpenClientConn(Socket clientSocket)
         {
+            receivePackNumber = 0;
+
             this.clientSocket = clientSocket;
             this.clientState = true;
             this.clientConnStartTime = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             this.clientBuff = new byte[MsgConfiguration.MSG_BUFF_SIZE];
             this.writeIndex = 0;
             this.readIndex = 0;
+            this.writeState = true;
+            this.readState = true;
             clientSocket.BeginReceive(clientBuff, writeIndex, MsgConfiguration.MSG_BUFF_SIZE - writeIndex, SocketFlags.None, EndReceive, null);
-
+            ThreadPool.QueueUserWorkItem(new WaitCallback(CheckMsgInfo));
+            Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ClientConn] -客户端索引:" + ClientIndex + " -开启新连接");
         }
         #endregion
 
@@ -107,24 +115,34 @@ namespace CricleMainServer.Network
         /// <param name="ar">用户定义的对象，其中包含有关接收操作的信息</param>
         private void EndReceive(IAsyncResult ar)
         {
-            int receiveCount = clientSocket.EndReceive(ar);
-            if (receiveCount == 0)
+            try
             {
-                //如果Receive()方法返回0，这个可以作为客户端关闭了的标志
+                int receiveCount = clientSocket.EndReceive(ar);
 
-                return;
+                if (receiveCount == 0)
+                {
+                    //如果Receive()方法返回0，这个可以作为客户端关闭了的标志
+
+                    return;
+                }
+                writeIndex += receiveCount;
+                //若写入后writeindex=数组大小,writeIndex归零;
+                if (writeIndex == MsgConfiguration.MSG_BUFF_SIZE)
+                {
+                    writeIndex = 0;
+                }
+                BeginReceiveStart();
             }
-            writeIndex += receiveCount;
-            //若写入后writeindex=数组大小,writeIndex归零;
-            if (writeIndex == MsgConfiguration.MSG_BUFF_SIZE)
+            catch(Exception e)
             {
-                writeIndex = 0;
+                Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ClientNet] -客户端索引:" + ClientIndex + " -接收信息错误:" + e);
+                SendCloseMessage("接收信息错误");
             }
-            BeginReceiveStart();
         }
 
         //  一、在写入数据时(接收数据时),socket将从write位置开始异步写入:
-        // 1.当writeIndex<readIndex-1,写入到readIndex前一位停止。
+        // 1.当writeIndex<readIndex-1,写入到readIndex前一位停止。(写入时writeIndex不可=readIndex，否则会与读取冲突，故实际缓存大小应)
         // 2.当writeIndex>=readIndex,可写入到数组的最后一位。
         // 3.当writeIndex=readIndex-1,进入等待线程池
         // 4.当writeindex=数组大小,writeIndex=0;
@@ -134,57 +152,87 @@ namespace CricleMainServer.Network
         /// </summary>
         private void BeginReceiveStart()
         {
+            if (!this.writeState)
+            {
+                writeState = true;
+            }
+
+            Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                   "] [Class:ClientNet] -客户端索引:" + ClientIndex + " -接收到信息:-readIndex:" +readIndex+"-writeIndex:"+writeIndex);
             //1.当writeIndex<readIndex-1,写入到readIndex-1位停止。
             if (writeIndex < readIndex - 1)
             {
-                clientSocket.BeginReceive(clientBuff, writeIndex, (readIndex - writeIndex), SocketFlags.None, EndReceive, null);
+                clientSocket.BeginReceive(clientBuff, writeIndex, (readIndex - writeIndex - 1), SocketFlags.None, EndReceive, null);
             }
             //2.当writeIndex >= readIndex,可写入到数组的最后一位。
+
             else if (writeIndex >= readIndex)
             {
-                clientSocket.BeginReceive(clientBuff, writeIndex, (MsgConfiguration.MSG_BUFF_SIZE - writeIndex), SocketFlags.None, EndReceive, null);
+                if(readIndex==0)
+                    clientSocket.BeginReceive(clientBuff, writeIndex, (MsgConfiguration.MSG_BUFF_SIZE - writeIndex-1), SocketFlags.None, EndReceive, null);
+                else
+                    clientSocket.BeginReceive(clientBuff, writeIndex, (MsgConfiguration.MSG_BUFF_SIZE - writeIndex), SocketFlags.None, EndReceive, null);
             }
             //3.writeIndex=readIndex-1,进入等待
-            //重启接收:由委托重启
             else if (writeIndex == readIndex - 1)
             {
-                
+                this.writeState = false;
+                Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                   "] [Class:ClientNet] -客户端索引:" + ClientIndex + " -等待接收重启");
+                return;
             }
+            RestartCheckMsg();
         }
 
         /// <summary>
         /// 重启接收 
         /// </summary>
-        /// <param name="clientIndex">链接序列号</param>
-        public void RestartReceive(int clientIndex)
+        public void RestartReceive()
         {
             if (!this.writeState)
             {
                 BeginReceiveStart();
-                writeState = false;
+                writeState = true;
+                Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ClientConn] -客户端索引:" + ClientIndex + " -重启异步接收");
             }
         }
         #endregion
         #region 处理缓存区消息
-        private void CheckMsgInfo()
+        private void CheckMsgInfo(Object obj)
         {
+            if (!readState)
+            {
+                readState = true;
+            }
+
             int checkState;
+            bool buffFull = (writeIndex == readIndex - 1);
             MsgPack msgPack=MsgPack.CheckMsgInfo(ref clientBuff, ref readIndex, ref writeIndex, out checkState);
             switch (checkState)
             {
                 case 0:
                     {
                         //表示当前无消息
-                    }break;
+                        Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                   "] [Class:ClientNet] -客户端索引:" + ClientIndex + " -等待解析重启:无消息");
+                    };break;
                 case 1:
                     {
                         //表示检查成功，从中接收数据中解析一个消息包msgPack
-
-                    }break;
+                        processMsg.switchMessage(msgPack);
+                        receivePackNumber++;
+                        Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                            "] [Class:ClientNet] -客户端索引:" + ClientIndex + " -累计处理包裹数量:"+ receivePackNumber);
+                        RestartReceive();
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(CheckMsgInfo));
+                        return;
+                    }
                 case 2:
                     {
                         //表示消息不完整，需要等待
-
+                        Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                   "] [Class:ClientNet] -客户端索引:" + ClientIndex + " -等待解析重启:需要等待");
                     } break;
                 case 3:
                     {
@@ -193,15 +241,17 @@ namespace CricleMainServer.Network
                     }
                     break;
             }
+            this.readState = false;
         }
 
         public void RestartCheckMsg()
         {
             if (!readState)
             {
-                CheckMsgInfo();
-                
                 readState = true;
+                ThreadPool.QueueUserWorkItem(new WaitCallback(CheckMsgInfo));
+                Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ClientConn] -客户端索引:" + ClientIndex + " -重启信息解析");
             }
         }
         #endregion
@@ -209,14 +259,19 @@ namespace CricleMainServer.Network
         #region 发送消息
         public void BeginSendMsg(MsgPack msgPack)
         {
-            clientSocket.BeginSend(msgPack.GetMsgPackData(), 0, msgPack.GetMsgPackData().Length, SocketFlags.None,
-             EndSendMsg, null); 
-        }
-
-        private void EndSendMsg(IAsyncResult ar)
-        {
-            //发送完成
-
+            try
+            {
+                clientSocket.BeginSend(msgPack.GetMsgPackData(), 0, msgPack.GetMsgPackData().Length, SocketFlags.None, asyncResult =>
+                {
+                    int len = clientSocket.EndSend(asyncResult);
+                    Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ClientNet] -客户端索引:" + ClientIndex + " -发送了一个信息,长度:" + len);
+                }, null);
+            }
+            catch (Exception ex)
+            {
+                SendCloseMessage("发送消息失败:" + ex);
+            }
         }
         #endregion
 
@@ -236,7 +291,8 @@ namespace CricleMainServer.Network
         /// <param name="msg">关闭原因</param>
         public void CloseTheConn(string msg)
         {
-            Console.WriteLine("链接序号:{"+clientIndex+"}-登录用户:{"+clientUID+"}-连接时长:{"+
+            Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ClientNet] -客户端索引:" + ClientIndex + "-登录用户:{" + clientUID+"}-连接时长:{"+
                 (new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() - clientConnStartTime) + "ms}-关闭了连接,原因:{"+msg+"}");
             this.clientSocket = null;
             this.clientState = false;

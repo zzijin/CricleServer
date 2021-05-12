@@ -31,6 +31,8 @@ namespace CricleMainServer.Network
             listenServer.Listen(10);
 
             listenServer.BeginAccept(AcceptCb, null);
+            Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ListenServer] -开始监听端口 -IP:"+ IPAddress.Any + " -Port:" + ServerConfiguration.PORT);
         }
 
         /// <summary>
@@ -43,12 +45,18 @@ namespace CricleMainServer.Network
             if (dTryNewConn(newSocket))
             {
                 //建立连接成功
+                Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:ListenServer] -链接池成功建立一个新连接,地址:" + newSocket.RemoteEndPoint.ToString());
             }
             else
             {
                 //建立连接失败
+                Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                   "] [Class:ListenServer] -链接池建立新连接失败,地址:" + newSocket.RemoteEndPoint.ToString() + "无空连接");
             }
             listenServer.BeginAccept(AcceptCb, null);
+            Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                   "] [Class:ListenServer] -开始监听端口 -IP:" + IPAddress.Any + " -Port:" + ServerConfiguration.PORT);
         }
 
         /// <summary>

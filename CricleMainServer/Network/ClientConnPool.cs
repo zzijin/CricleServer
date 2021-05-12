@@ -12,6 +12,11 @@ namespace CricleMainServer.Network
     {
         private ClientConn[] clientPool;
 
+        private DFindSocketByUIDFromPool dFindSocketByUID;
+        private DTryNewConn dTryNewConn;
+
+        internal DTryNewConn DTryNewConn { get => dTryNewConn; set => dTryNewConn = value; }
+
         public ClientConnPool()
         {
             InitPool();
@@ -19,8 +24,8 @@ namespace CricleMainServer.Network
 
         public void InitPool()
         {
-            DFindSocketByUIDFromPool dFindSocketByUID = new DFindSocketByUIDFromPool(FindSocketByUID);
-            DTryNewConn dTryNewConn = new DTryNewConn(TryNewConn);
+            dFindSocketByUID = new DFindSocketByUIDFromPool(FindSocketByUID);
+            dTryNewConn = new DTryNewConn(TryNewConn);
 
             //初始化客户链接池
             clientPool = new ClientConn[ServerConfiguration.CONN_SIZE];
@@ -30,6 +35,11 @@ namespace CricleMainServer.Network
             }
         }
 
+        /// <summary>
+        /// 尝试建立一个新链接
+        /// </summary>
+        /// <param name="newSocket"></param>
+        /// <returns></returns>
         public bool TryNewConn(Socket newSocket)
         {
             int freeConnIndex = FindFreeConn();

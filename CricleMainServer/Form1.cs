@@ -13,7 +13,16 @@ namespace CricleMainServer
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //TestReceiveAndProcesses.tMain();
+            //CricleMainServer.TestConsole.TestReceiveAndProcesses.tMain();
+        }
+
+        private void openServer_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine("[" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() +
+                    "] [Class:Form1] -开启服务器:");
+            ServerManager serverManager = new ServerManager();
+            serverManager.OpenListenServer();
+            openServer.Visible = false;
         }
     }
 }
